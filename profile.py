@@ -1,21 +1,20 @@
 import flet as ft
 import sqlite3
 
-DB = "database.db"
+def open_profile(page: ft.Page, container: ft.Column, gmail):
+    container.controls.clear()
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+    c.execute("SELECT name, role, balance FROM users WHERE gmail = ?", (gmail,))
+    user = c.fetchone()
+    conn.close()
+    if not user:
+        container.controls.append(ft.Text("User not found"))
+        page.update()
+        return
 
-def ProfilePage(page, user):
-    conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-
-    name_text = ft.Text(f"Имя: {user['name']}")
-    email_text = ft.Text(f"Email: {user['email']}")
-
-    keys_text = ft.Column([ft.Text(f"Ключ: {k}") for k in user.get("keys", [])])
-
-    return ft.Column([
-        ft.Text("Профиль", size=25),
-        name_text,
-        email_text,
-        ft.Text("Купленные ключи:"),
-        keys_text
-    ])
+    name, role, balance = user
+    container.controls.append(ft.Text(f"Name: {name}"))
+    container.controls.append(ft.Text(f"Role: {role}"))
+    container.controls.append(ft.Text(f"Balance: {balance}"))
+    page.update()
