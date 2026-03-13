@@ -1,5 +1,16 @@
 import flet as ft
-import time
+import os
+import traceback
+
+# Пути к файлам в памяти телефона
+USERS_FILE = "/storage/emulated/0/drip_users.txt"
+LOG_FILE = "/storage/emulated/0/drip_debug_log.txt"
+
+def write_log(text):
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(text + "\n")
+    except: pass
 
 def main(page: ft.Page):
     page.title = "DRIP CLIENT"
@@ -7,101 +18,71 @@ def main(page: ft.Page):
     page.bgcolor = "#000000"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.padding = 40
 
-    # -------------------- Загрузочный экран --------------------
-    loading_text = ft.Text("SYSTEM BOOT...", size=28, color="#00FF00", weight="bold")
-    page.add(loading_text)
-    page.update()
-    time.sleep(1.2)  # имитация загрузки
-    page.controls.clear()
-    page.update()
-
-    # -------------------- Функция авторизации --------------------
-    def login_click(e):
-        if not user_field.value or not pass_field.value:
-            if not user_field.value:
-                user_field.error_text = "Введите логин"
-            else:
-                user_field.error_text = None
-            if not pass_field.value:
-                pass_field.error_text = "Введите пароль"
-            else:
-                pass_field.error_text = None
-            page.update()
-        else:
-            page.controls.clear()
-            welcome_text = ft.Text("WELCOME, DRIPPER!", size=30, color="#00FF00", weight="bold")
-            system_text = ft.Text("SYSTEM ACTIVE", color="#555555")
-            back_btn = ft.ElevatedButton(
-                "BACK",
-                bgcolor="#00FF00",
-                color="#000000",
-                on_click=lambda _: main(page)
-            )
-
-            # Анимация появления
-            page.add(ft.Column([welcome_text, system_text, back_btn], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=15, opacity=0))
-            for c in page.controls:
-                c.opacity = 1
-                page.update()
-            page.update()
-
-    # -------------------- Элементы авторизации --------------------
-    title = ft.Text("AUTHORIZATION", size=32, color="#00FF00", weight="bold", opacity=0)
-    user_field = ft.TextField(
-        label="Username",
-        border_color="#00FF00",
-        color="#00FF00",
-        focused_border_color="#FFFFFF",
-        width=300,
-        opacity=0
-    )
-    pass_field = ft.TextField(
-        label="Password",
-        password=True,
-        can_reveal_password=True,
-        border_color="#00FF00",
-        color="#00FF00",
-        focused_border_color="#FFFFFF",
-        width=300,
-        opacity=0
-    )
-    login_btn = ft.ElevatedButton(
-        text="LOG IN",
-        width=300,
-        height=50,
-        bgcolor="#00FF00",
-        color="#000000",
-        on_click=login_click,
-        opacity=0
-    )
-    version_text = ft.Text("v1.2 STABLE", size=10, color="#333333", opacity=0)
-
-    # -------------------- Добавляем элементы на страницу --------------------
-    auth_column = ft.Column(
-        [
-            title,
-            ft.Container(height=20),
-            user_field,
-            pass_field,
-            ft.Container(height=10),
-            login_btn,
-            version_text
-        ],
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=10
-    )
-
-    page.add(auth_column)
-    page.update()
-
-    # -------------------- Анимация появления --------------------
-    for control in auth_column.controls:
-        control.opacity = 1
+    def show_msg(text, color="white"):
+        page.snack_bar = ft.SnackBar(ft.Text(text), bgcolor=color)
+        page.snack_bar.open = True
         page.update()
-        time.sleep(0.05)  # лёгкая анимация появления
 
-# -------------------- Запуск приложения --------------------
-if __name__ == "__main__":
-    ft.app(target=main, view=ft.AppView.FLET_APP)
+    # --- ЛОГИКА РЕГИСТРАЦИИ ---
+    def register_user(e):
+        u = user_input.value
+        p = pass_input.value
+        if u and p:
+            try:
+                with open(USERS_FILE, "a") as f:
+                    f.write(f"{u}:{p}\n")
+                write_log(f"New user registered: {u}")
+                show_msg("Регистрация успешна! Теперь войдите.", "green")
+            except Exception as ex:
+                write_log(f"Reg error: {traceback.format_exc()}")
+                show_msg("Ошибка доступа к памяти!", "red")
+        else:
+            show_msg("Заполните все поля!")
+
+    # --- ЛОГИКА ВХОДА ---
+    def login_user(e):
+        u = user_input.value
+        p = pass_input.value
+        write_log(f"Login attempt: {u}")
+        try:
+            if os.path.exists(USERS_FILE):
+                with open(USERS_FILE, "r") as f:
+                    users = f.readlines()
+                if f"{u}:{p}\n" in users:
+                    write_log("Login success!")
+                    page.clean()
+                    page.add(ft.Text(f"WELCOME, {u}!", size=30, color="#00FF00"))
+                    page.update()
+                else:
+                    show_msg("Неверный логин или пароль", "red")
+            else:
+                show_msg("Пользователей еще нет. Зарегистрируйтесь!")
+        except Exception as ex:
+            write_log(f"Login error: {traceback.format_exc()}")
+
+    # --- ИНТЕРФЕЙС ---
+    user_input = ft.TextField(label="Username", border_color="#00FF00", width=300)
+    pass_input = ft.TextField(label="Password", password=True, border_color="#00FF00", width=300)
+
+    page.add(
+        ft.Text("DRIP SYSTEM", size=30, weight="bold", color="#00FF00"),
+        ft.Container(height=20),
+        user_input,
+        pass_input,
+        ft.Container(height=10),
+        ft.Row([
+            ft.ElevatedButton("LOG IN", on_click=login_user, bgcolor="#00FF00", color="black"),
+            ft.OutlinedButton("REGISTER", on_click=register_user, border_color="#00FF00"),
+        ], alignment="center"),
+        ft.Text(f"Logs: {LOG_FILE}", size=10, color="grey")
+    )
+    
+    write_log("UI Loaded")
+    page.update()
+
+# Запуск
+try:
+    ft.app(target=main)
+except Exception:
+    write_log(f"App Crash: {traceback.format_exc()}")
