@@ -1,73 +1,60 @@
 import flet as ft
-import time
-import os
+import asyncio
 
-def main(page: ft.Page):
-    page.title = "DRIP CLIENT MOBILE"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.window_bgcolor = "#000000"
-    page.padding = 20
-    page.vertical_alignment = ft.MainAxisAlignment.START
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+async def main(page: ft.Page):
+page.title = "DRIP CLIENT MOBILE"
+page.theme_mode = ft.ThemeMode.DARK
+page.padding = 20
 
-    logo = ft.Text(
-        value="DRIP CLIENT",
-        size=40,
-        color="#00FF00",
-        weight=ft.FontWeight.BOLD,
-        italic=True,
-        shadow=ft.BoxShadow(blur_radius=10, color="#00FF00")
-    )
+logo = ft.Text(
+    "DRIP CLIENT",
+    size=40,
+    weight=ft.FontWeight.BOLD,
+    color="#00FF00"
+)
 
-    status_text = ft.Text("System: IDLE", color="#555555", size=14)
-    progress_bar = ft.ProgressBar(width=300, color="#00FF00", bgcolor="#111111", visible=False)
+status = ft.Text("STATUS: IDLE", color="#777777")
 
-    def start_inject(e):
-        inject_btn.disabled = True
-        progress_bar.visible = True
-        status_text.value = "STATUS: INITIALIZING..."
+progress = ft.ProgressBar(width=300, visible=False)
+
+async def start_session(e):
+    button.disabled = True
+    progress.visible = True
+    page.update()
+
+    steps = [
+        "INITIALIZING...",
+        "LOADING MODULES...",
+        "CONNECTING...",
+        "SESSION STARTED"
+    ]
+
+    for s in steps:
+        status.value = f"STATUS: {s}"
         page.update()
+        await asyncio.sleep(1)
 
-        steps = ["LOADING ASSETS...", "BYPASSING...", "DRIP ACTIVE!"]
-        for step in steps:
-            time.sleep(1)
-            status_text.value = f"STATUS: {step}"
-            page.update()
+    button.text = "CONNECTED"
+    page.update()
 
-        inject_btn.text = "CONNECTED"
-        inject_btn.bgcolor = "#004400"
-        page.update()
+button = ft.ElevatedButton(
+    "START SESSION",
+    width=250,
+    height=50,
+    on_click=start_session
+)
 
-    inject_btn = ft.ElevatedButton(
-        text="START SESSION",
-        width=250,
-        height=50,
-        color="#00FF00",
-        bgcolor="#111111",
-        on_click=start_inject,
-        style=ft.ButtonStyle(
-            shape=ft.RoundedRectangleBorder(radius=8),
-            side=ft.BorderSide(2, "#00FF00")
-        )
+page.add(
+    ft.Column(
+        [
+            logo,
+            ft.Text("MOBILE EDITION v1.0", size=12),
+            status,
+            progress,
+            button
+        ],
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
+)
 
-    page.add(
-        ft.Column(
-            [
-                ft.Container(height=50),
-                logo,
-                ft.Text("MOBILE EDITION v1.0", color="#00FF00", size=12),
-                ft.Container(height=100),
-                status_text,
-                progress_bar,
-                inject_btn,
-                ft.Container(height=20),
-                ft.TextButton("FF MARKET ACCESS", icon=ft.icons.SHOPPING_CART, icon_color="#00FF00"),
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20
-        )
-    )
-
-if __name__ == "__main__":
-    ft.app(target=main)
+ft.app(target=main)
