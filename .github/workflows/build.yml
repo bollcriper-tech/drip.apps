@@ -1,5 +1,4 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
@@ -7,44 +6,37 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Клонируем репозиторий
       - uses: actions/checkout@v4
 
-      # 2️⃣ Устанавливаем Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      # 3️⃣ Устанавливаем Java (нужно для Android)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4️⃣ Устанавливаем Flutter (Flet использует его для сборки APK)
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      # 5️⃣ Устанавливаем зависимости Python
-      - name: Install Python Dependencies
+      - name: Install Flet
         run: |
           pip install --upgrade pip
-          pip install flet flet-cli
+          pip install flet
 
-      # 6️⃣ Собираем APK
       - name: Build APK
         run: |
-          flet build apk
+          # Собираем APK с доступом к памяти
+          flet build apk --release
 
-      # 7️⃣ Загружаем APK в Artifacts GitHub
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: drip-client
+          name: drip-client-v1.3
           path: build/apk/*.apk
