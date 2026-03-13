@@ -24,6 +24,9 @@ jobs:
 
       - name: Build with Buildozer
         run: |
+          # Сбрасываем пути к NDK, чтобы они не мешали Buildozer-у
+          export ANDROID_NDK_HOME=""
+          export ANDROID_NDK_ROOT=""
           rm -rf .buildozer/
           yes | buildozer android debug
         
