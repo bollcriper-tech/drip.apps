@@ -2,9 +2,9 @@ import flet as ft
 import os
 import traceback
 
-# Пути к файлам в памяти телефона (стандартный путь Android)
-LOG_FILE = "/storage/emulated/0/drip_debug_log.txt"
-USERS_FILE = "/storage/emulated/0/drip_users.txt"
+# Локальные файлы внутри папки приложения (самый надежный способ)
+LOG_FILE = "drip_debug_log.txt"
+USERS_FILE = "drip_users.txt"
 
 def write_to_file(path, text):
     try:
@@ -20,13 +20,12 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
-    write_to_file(LOG_FILE, "--- APP INITIALIZED ---")
+    write_to_file(LOG_FILE, "--- APP STARTED ---")
 
-    # Поля ввода
     user_input = ft.TextField(label="Username", border_color="#00FF00", width=300)
-    pass_input = ft.TextField(label="Password", password=True, can_reveal_password=True, border_color="#00FF00", width=300)
+    pass_input = ft.TextField(label="Password", password=True, border_color="#00FF00", width=300)
 
-    # Функция регистрации
+    # Регистрация
     def do_register(e):
         u, p = user_input.value, pass_input.value
         if u and p:
@@ -36,31 +35,39 @@ def main(page: ft.Page):
             page.snack_bar.open = True
             page.update()
         else:
-            write_to_file(LOG_FILE, "Registration failed: empty fields")
+            page.snack_bar = ft.SnackBar(ft.Text("Заполните поля!"), bgcolor="red")
+            page.snack_bar.open = True
+            page.update()
 
-    # Функция входа
+    # Вход
     def do_login(e):
         u, p = user_input.value, pass_input.value
-        write_to_file(LOG_FILE, f"Login attempt for: {u}")
+        write_to_file(LOG_FILE, f"Login attempt: {u}")
         try:
             if os.path.exists(USERS_FILE):
                 with open(USERS_FILE, "r") as f:
                     data = f.read()
                 if f"{u}:{p}" in data:
-                    write_to_file(LOG_FILE, "Login SUCCESS")
                     page.clean()
-                    page.add(ft.Text(f"ДОБРО ПОЖАЛОВАТЬ, {u}!", size=30, color="#00FF00"))
+                    page.add(
+                        ft.Text(f"ДОБРО ПОЖАЛОВАТЬ, {u}!", size=30, color="#00FF00", weight="bold"),
+                        ft.Text("СИСТЕМА АКТИВИРОВАНА", color="#555555"),
+                        ft.ElevatedButton("ВЫЙТИ", on_click=lambda _: main(page))
+                    )
                 else:
-                    write_to_file(LOG_FILE, "Login FAILED: wrong credentials")
+                    page.snack_bar = ft.SnackBar(ft.Text("Неверный логин или пароль!"), bgcolor="red")
+                    page.snack_bar.open = True
             else:
-                write_to_file(LOG_FILE, "Login FAILED: users.txt not found")
+                page.snack_bar = ft.SnackBar(ft.Text("База пуста! Зарегистрируйтесь."), bgcolor="orange")
+                page.snack_bar.open = True
         except Exception:
-            write_to_file(LOG_FILE, f"CRITICAL ERROR: {traceback.format_exc()}")
+            write_to_file(LOG_FILE, traceback.format_exc())
+        page.update()
 
-    # Интерфейс
+    # Главный экран
+    page.clean()
     page.add(
         ft.Text("DRIP CLIENT", size=35, weight="bold", color="#00FF00"),
-        ft.Text("REGISTRATION & LOGIN SYSTEM", color="#555555"),
         ft.Container(height=20),
         user_input,
         pass_input,
@@ -68,13 +75,11 @@ def main(page: ft.Page):
         ft.Row([
             ft.ElevatedButton("LOG IN", on_click=do_login, bgcolor="#00FF00", color="black"),
             ft.OutlinedButton("REGISTER", on_click=do_register, border_color="#00FF00")
-        ], alignment="center"),
-        ft.Text(f"Debug file: {LOG_FILE}", size=10, color="grey")
+        ], alignment="center")
     )
     page.update()
 
-# Запуск с отловом самых ранних ошибок
 try:
     ft.app(target=main)
 except Exception:
-    write_to_file(LOG_FILE, f"BOOT ERROR: {traceback.format_exc()}")
+    write_to_file(LOG_FILE, traceback.format_exc())
