@@ -5,53 +5,82 @@ async def main(page: ft.Page):
     page.title = "DRIP CLIENT MOBILE"
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = 20
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    
+    # Делаем на весь экран
+    page.window_full_screen = True
 
-    logo = ft.Text(
-        "DRIP CLIENT",
-        size=40,
-        weight=ft.FontWeight.BOLD,
-        color="#00FF00"
-    )
+    # --- ФУНКЦИЯ ПЕРЕХОДА В ГЛАВНОЕ МЕНЮ ---
+    async def open_dashboard(e):
+        page.clean() # Очищаем страницу логина
+        
+        # Логотип и статус
+        logo = ft.Text("DRIP CLIENT", size=40, weight="bold", color="#00FF00")
+        status = ft.Text("STATUS: AUTHORIZED", color="#00FF00", size=14)
+        progress = ft.ProgressBar(width=300, visible=False, color="#00FF00")
 
-    status = ft.Text("STATUS: IDLE", color="#777777")
-    progress = ft.ProgressBar(width=300, visible=False)
-
-    async def start_session(e):
-        button.disabled = True
-        progress.visible = True
-        page.update()
-
-        steps = ["INITIALIZING...", "LOADING MODULES...", "CONNECTING...", "SESSION STARTED"]
-        for s in steps:
-            status.value = f"STATUS: {s}"
+        async def start_session(e):
+            btn.disabled = True
+            progress.visible = True
             page.update()
-            await asyncio.sleep(1)
+            steps = ["BYPASSING...", "INJECTING...", "ACTIVE!"]
+            for s in steps:
+                status.value = f"STATUS: {s}"
+                page.update()
+                await asyncio.sleep(1)
+            btn.text = "READY"
+            page.update()
 
-        button.text = "CONNECTED"
-        page.update()
+        btn = ft.ElevatedButton("START INJECT", on_click=start_session, width=250, color="#00FF00")
 
-    button = ft.ElevatedButton(
-        "START SESSION",
-        width=250,
-        height=50,
-        on_click=start_session,
-        style=ft.ButtonStyle(color="#00FF00", bgcolor="#111111")
-    )
-
-    page.add(
-        ft.Column(
-            [
+        page.add(
+            ft.Column([
                 logo,
-                ft.Text("MOBILE EDITION v1.0", size=12, color="#00FF00"),
-                ft.Container(height=50),
                 status,
                 progress,
-                button
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                btn,
+                ft.TextButton("LOGOUT", on_click=lambda _: main(page))
+            ], horizontal_alignment="center", spacing=30)
         )
+        page.update()
+
+    # --- СТРАНИЦА ЛОГИНА ---
+    login_card = ft.Container(
+        content=ft.Column([
+            ft.Text("AUTHORIZATION", size=25, weight="bold", color="#00FF00"),
+            ft.TextField(label="Login", border_color="#00FF00", color="#00FF00"),
+            ft.TextField(label="Password", password=True, can_reveal_password=True, border_color="#00FF00"),
+            
+            ft.ElevatedButton(
+                "LOGIN", 
+                width=200, 
+                bgcolor="#00FF00", 
+                color="black",
+                on_click=open_dashboard
+            ),
+            
+            ft.Divider(color="#333333"),
+            
+            # Кнопка Google (имитация)
+            ft.OutlinedButton(
+                content=ft.Row([
+                    ft.Icon(ft.icons.GOOGLEG_LOG_IN, color="white"),
+                    ft.Text("Login with Google", color="white"),
+                ], alignment="center"),
+                width=200,
+                on_click=open_dashboard # Пока просто вход
+            ),
+        ], horizontal_alignment="center", spacing=20),
+        padding=30,
+        border=ft.border.all(1, "#00FF00"),
+        border_radius=15,
+        bgcolor="#111111"
     )
+
+    page.clean()
+    page.add(login_card)
+    page.update()
 
 if __name__ == "__main__":
     ft.app(target=main)
