@@ -20,8 +20,8 @@ jobs:
       # 3️⃣ Устанавливаем зависимости
       - run: pip install -r requirements.txt
 
-      # 4️⃣ Собираем APK через Flet
-      - run: flet build apk
+      # 4️⃣ Собираем APK через Flet без запроса
+      - run: flet build apk --yes
 
       # 5️⃣ Загружаем APK как артефакт
       - uses: actions/upload-artifact@v4
