@@ -1,37 +1,39 @@
 name: Build APK
-on: [push, pull_request]
+
+on:
+push:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+build:
+runs-on: ubuntu-latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+steps:
+  - uses: actions/checkout@v4
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git ffmpeg libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libsqlite3-dev cmake libffi-dev libssl-dev autoconf autotools-dev libtool m4
-      
-      - name: Install Python Tools
-        run: |
-          pip install --upgrade pip setuptools wheel
-          pip install "cython<3.0.0" buildozer
+  - name: Setup Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.10"
 
-      - name: Build with Buildozer
-        run: |
-          # Сбрасываем пути к NDK, чтобы они не мешали Buildozer-у
-          export ANDROID_NDK_HOME=""
-          export ANDROID_NDK_ROOT=""
-          rm -rf .buildozer/
-          yes | buildozer android debug
-        
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: drip-client-release
-          path: bin/*.apk
+  - name: Install Python packages
+    run: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+  - name: Install Flet CLI
+    run: pip install flet
+
+  - name: Install Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      channel: stable
+
+  - name: Build APK
+    run: |
+      flet build apk
+
+  - name: Upload APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: drip-client
+      path: build/apk/*.apk
