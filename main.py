@@ -1,87 +1,77 @@
 import flet as ft
-import asyncio
 
-async def main(page: ft.Page):
-    page.title = "DRIP CLIENT MOBILE"
+def main(page: ft.Page):
+    # Настройки страницы
+    page.title = "DRIP CLIENT"
     page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 20
+    page.bgcolor = "#000000"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.padding = 40
+
+    # Функция перехода (чтобы проверить, что кнопки работают)
+    def login_click(e):
+        if not user_field.value or not pass_field.value:
+            user_field.error_text = "Введите логин"
+            pass_field.error_text = "Введите пароль"
+            page.update()
+        else:
+            page.controls.clear()
+            page.add(
+                ft.Text("WELCOME, DRIPPER!", size=30, color="#00FF00", weight="bold"),
+                ft.Text("SYSTEM ACTIVE", color="#555555"),
+                ft.ElevatedButton("BACK", on_click=lambda _: main(page))
+            )
+            page.update()
+
+    # Элементы интерфейса
+    title = ft.Text("AUTHORIZATION", size=28, color="#00FF00", weight="bold")
     
-    # Делаем на весь экран
-    page.window_full_screen = True
-
-    # --- ФУНКЦИЯ ПЕРЕХОДА В ГЛАВНОЕ МЕНЮ ---
-    async def open_dashboard(e):
-        page.clean() # Очищаем страницу логина
-        
-        # Логотип и статус
-        logo = ft.Text("DRIP CLIENT", size=40, weight="bold", color="#00FF00")
-        status = ft.Text("STATUS: AUTHORIZED", color="#00FF00", size=14)
-        progress = ft.ProgressBar(width=300, visible=False, color="#00FF00")
-
-        async def start_session(e):
-            btn.disabled = True
-            progress.visible = True
-            page.update()
-            steps = ["BYPASSING...", "INJECTING...", "ACTIVE!"]
-            for s in steps:
-                status.value = f"STATUS: {s}"
-                page.update()
-                await asyncio.sleep(1)
-            btn.text = "READY"
-            page.update()
-
-        btn = ft.ElevatedButton("START INJECT", on_click=start_session, width=250, color="#00FF00")
-
-        page.add(
-            ft.Column([
-                logo,
-                status,
-                progress,
-                btn,
-                ft.TextButton("LOGOUT", on_click=lambda _: main(page))
-            ], horizontal_alignment="center", spacing=30)
-        )
-        page.update()
-
-    # --- СТРАНИЦА ЛОГИНА ---
-    login_card = ft.Container(
-        content=ft.Column([
-            ft.Text("AUTHORIZATION", size=25, weight="bold", color="#00FF00"),
-            ft.TextField(label="Login", border_color="#00FF00", color="#00FF00"),
-            ft.TextField(label="Password", password=True, can_reveal_password=True, border_color="#00FF00"),
-            
-            ft.ElevatedButton(
-                "LOGIN", 
-                width=200, 
-                bgcolor="#00FF00", 
-                color="black",
-                on_click=open_dashboard
-            ),
-            
-            ft.Divider(color="#333333"),
-            
-            # Кнопка Google (имитация)
-            ft.OutlinedButton(
-                content=ft.Row([
-                    ft.Icon(ft.icons.GOOGLEG_LOG_IN, color="white"),
-                    ft.Text("Login with Google", color="white"),
-                ], alignment="center"),
-                width=200,
-                on_click=open_dashboard # Пока просто вход
-            ),
-        ], horizontal_alignment="center", spacing=20),
-        padding=30,
-        border=ft.border.all(1, "#00FF00"),
-        border_radius=15,
-        bgcolor="#111111"
+    user_field = ft.TextField(
+        label="Username",
+        border_color="#00FF00",
+        color="#00FF00",
+        focused_border_color="#FFFFFF",
+        width=300
+    )
+    
+    pass_field = ft.TextField(
+        label="Password",
+        password=True,
+        can_reveal_password=True,
+        border_color="#00FF00",
+        color="#00FF00",
+        focused_border_color="#FFFFFF",
+        width=300
     )
 
-    page.clean()
-    page.add(login_card)
+    login_btn = ft.ElevatedButton(
+        text="LOG IN",
+        width=300,
+        height=50,
+        bgcolor="#00FF00",
+        color="#000000",
+        on_click=login_click
+    )
+
+    # Собираем страницу
+    page.add(
+        ft.Column(
+            [
+                title,
+                ft.Container(height=20),
+                user_field,
+                pass_field,
+                ft.Container(height=10),
+                login_btn,
+                ft.Text("v1.2 STABLE", size=10, color="#333333")
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10
+        )
+    )
     page.update()
 
+# Запуск приложения
 if __name__ == "__main__":
     ft.app(target=main)
-    
