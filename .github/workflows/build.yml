@@ -32,11 +32,11 @@ jobs:
 
       - name: Build APK
         run: |
-          # Собираем APK с доступом к памяти
-          flet build apk --release
+          # Используем только поддерживаемые аргументы
+          flet build apk --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: drip-client-v1.3
+          name: drip-client-final
           path: build/apk/*.apk
