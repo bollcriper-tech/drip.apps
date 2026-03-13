@@ -1,20 +1,22 @@
 import flet as ft
+from utils.theme_manager import set_theme
 
-def SettingsPage(page, user):
-    gmail_input = ft.TextField(label="Ваш Gmail", value=user.get("email",""))
-    theme_switch = ft.Switch(label="Хакерская тема")
+def open_settings(page: ft.Page, container: ft.Column):
+    container.controls.clear()
+    theme_mode = "dark"
+    theme_text = ft.Text(f"Theme: {theme_mode}")
 
-    result_text = ft.Text()
-
-    def save(e):
-        user["email"] = gmail_input.value
-        result_text.value = f"Gmail сохранён: {user['email']}"
+    def toggle_theme(e):
+        nonlocal theme_mode
+        theme_mode = "light" if theme_mode == "dark" else "dark"
+        set_theme(page, theme_mode)
+        theme_text.value = f"Theme: {theme_mode}"
         page.update()
 
-    return ft.Column([
-        ft.Text("Настройки", size=25),
-        gmail_input,
-        theme_switch,
-        ft.ElevatedButton("Сохранить", on_click=save),
-        result_text
-    ])
+    theme_btn = ft.ElevatedButton("Toggle Theme", on_click=toggle_theme)
+
+    container.controls.append(ft.Column([
+        ft.Text("Settings", size=24, weight="bold"),
+        ft.Row([theme_text, theme_btn], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+    ]))
+    page.update()
